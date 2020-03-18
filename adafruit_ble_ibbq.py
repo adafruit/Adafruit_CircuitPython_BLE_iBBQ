@@ -92,14 +92,14 @@ class IBBQService(Service):
     _UNITS_CELSIUS_MSG = b"\x02\x00\x00\x00\x00\x00"
     _REQUEST_BATTERY_LEVEL_MSG = b"\x08\x24\x00\x00\x00\x00"
 
-    @staticmethod
-    def target_temp_msg(low, high):
-        return struct.pack("<HH", low, high)
-
     def __init__(self, service=None):
         super().__init__(service=service)
-        self._settings_result_buf = bytearray(self.settings_result.packet_size)
-        self._realtime_data_buf = bytearray(self.realtime_data.packet_size)
+        self._settings_result_buf = bytearray(
+            self.settings_result.packet_size  # pylint: disable=no-member
+        )
+        self._realtime_data_buf = bytearray(
+            self.realtime_data.packet_size  # pylint: disable=no-member
+        )
 
     uuid = StandardUUID(0xFFF0)
 
@@ -127,16 +127,6 @@ class IBBQService(Service):
     )
     """Send control messages here."""
 
-    @property
-    def settings_result_bytes(self):
-        length = self.settings_result.readinto(self._settings_result_buf)
-        return self._settings_result_buf[:length]
-
-    @property
-    def realtime_data_bytes(self):
-        length = self.realtime_data.readinto(self._realtime_data_buf)
-        return self._realtime_data_buf[:length]
-
     def init(self):
         """Perform initial "pairing", which is not regular BLE pairing."""
         self.account_and_verify = self._CREDENTIALS_MSG
@@ -161,13 +151,15 @@ class IBBQService(Service):
         """Return a tuple of temperatures for all the possible temperature probes on the device.
         Temperatures are in degrees Celsius. Unconnected probes return 0.0.
         """
-        data = self.realtime_data_bytes
-        if not data:
-            return None
-        return tuple(
-            struct.unpack_from("<H", data, offset=offset)[0] / 10
-            for offset in range(0, len(data), 2)
-        )
+        data = self._realtime_data_buf
+        length = self.realtime_data.readinto(data)  # pylint: disable=no-member
+        if length > 0:
+            return tuple(
+                struct.unpack_from("<H", data, offset=offset)[0] / 10
+                for offset in range(0, length, 2)
+            )
+        # No data.
+        return None
 
     @property
     def battery_level(self):
@@ -176,10 +168,10 @@ class IBBQService(Service):
         actual battery voltage by 0.1v or so.
         """
         self.settings_data = self._REQUEST_BATTERY_LEVEL_MSG
-        result = self.settings_result_bytes
-        if len(result) >= 5:
-            # There can be at least one extra byte at the end, so use unpack_from().
-            header, current_voltage, max_voltage = struct.unpack_from("<BHH", result)
+        results = self._settings_result_buf
+        length = self.settings_result.readinto(results)  # pylint: disable=no-member
+        if length >= 5:
+            header, current_voltage, max_voltage = struct.unpack_from("<BHH", results)
             if header == 0x24:
                 # Calibration was determined empirically, by comparing
                 # the returned values with actual measurements of battery voltage,
@@ -188,5 +180,5 @@ class IBBQService(Service):
                     current_voltage / 2000 - 0.3,
                     (6550 if max_voltage == 0 else max_voltage) / 2000,
                 )
-        # Unexpected response.
+        # Unexpected response or no data.
         return None
