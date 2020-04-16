@@ -139,7 +139,7 @@ class IBBQService(Service):
         """
         self.settings_data = self._UNITS_FAHRENHEIT_MSG
 
-    def set_to_celsius(self):
+    def display_celsius(self):
         """Display temperatures on device in degrees Celsius.
 
         Note: This does not change the units returned by `temperatures`.
