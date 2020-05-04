@@ -94,12 +94,9 @@ class IBBQService(Service):
 
     def __init__(self, service=None):
         super().__init__(service=service)
-        self._settings_result_buf = bytearray(
-            self.settings_result.packet_size  # pylint: disable=no-member
-        )
-        self._realtime_data_buf = bytearray(
-            self.realtime_data.packet_size  # pylint: disable=no-member
-        )
+        # Defer creating buffers until needed, since MTU is not known yet.
+        self._settings_result_buf = None
+        self._realtime_data_buf = None
 
     uuid = StandardUUID(0xFFF0)
 
@@ -151,6 +148,10 @@ class IBBQService(Service):
         """Return a tuple of temperatures for all the possible temperature probes on the device.
         Temperatures are in degrees Celsius. Unconnected probes return 0.0.
         """
+        if self._realtime_data_buf is None:
+            self._realtime_data_buf = bytearray(
+                self.realtime_data.packet_size  # pylint: disable=no-member
+            )
         data = self._realtime_data_buf
         length = self.realtime_data.readinto(data)  # pylint: disable=no-member
         if length > 0:
@@ -167,6 +168,11 @@ class IBBQService(Service):
         Results are approximate and may differ from the
         actual battery voltage by 0.1v or so.
         """
+        if self._settings_result_buf is None:
+            self._settings_result_buf = bytearray(
+                self.settings_result.packet_size  # pylint: disable=no-member
+            )
+
         self.settings_data = self._REQUEST_BATTERY_LEVEL_MSG
         results = self._settings_result_buf
         length = self.settings_result.readinto(results)  # pylint: disable=no-member
