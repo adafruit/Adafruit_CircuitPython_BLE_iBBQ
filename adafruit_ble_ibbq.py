@@ -132,7 +132,7 @@ class IBBQService(Service):
         """
         if self._realtime_data_buf is None:
             self._realtime_data_buf = bytearray(
-                self.realtime_data.packet_size  # pylint: disable=no-member
+                self.realtime_data.incoming_packet_length  # pylint: disable=no-member
             )
         data = self._realtime_data_buf
         length = self.realtime_data.readinto(data)  # pylint: disable=no-member
@@ -152,7 +152,7 @@ class IBBQService(Service):
         """
         if self._settings_result_buf is None:
             self._settings_result_buf = bytearray(
-                self.settings_result.packet_size  # pylint: disable=no-member
+                self.settings_result.incoming_packet_length  # pylint: disable=no-member
             )
 
         self.settings_data = self._REQUEST_BATTERY_LEVEL_MSG
