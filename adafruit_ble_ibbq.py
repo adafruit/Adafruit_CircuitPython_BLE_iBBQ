@@ -41,7 +41,7 @@ class _SettingsResult(ComplexCharacteristic):
     def __init__(self):
         super().__init__(properties=Characteristic.NOTIFY)
 
-    def bind(self, service):
+    def bind(self, service: Service) -> _bleio.PacketBuffer:
         """Bind to an IBBQService."""
         bound_characteristic = super().bind(service)
         bound_characteristic.set_cccd(notify=True)
@@ -57,7 +57,7 @@ class _RealtimeData(ComplexCharacteristic):
     def __init__(self):
         super().__init__(properties=Characteristic.NOTIFY)
 
-    def bind(self, service):
+    def bind(self, service: Service) -> _bleio.PacketBuffer:
         """Bind to an IBBQService."""
         bound_characteristic = super().bind(service)
         bound_characteristic.set_cccd(notify=True)
@@ -74,7 +74,7 @@ class IBBQService(Service):
     _UNITS_CELSIUS_MSG = b"\x02\x00\x00\x00\x00\x00"
     _REQUEST_BATTERY_LEVEL_MSG = b"\x08\x24\x00\x00\x00\x00"
 
-    def __init__(self, service=None):
+    def __init__(self, service: Service = None) -> None:
         super().__init__(service=service)
         # Defer creating buffers until needed, since MTU is not known yet.
         self._settings_result_buf = None
