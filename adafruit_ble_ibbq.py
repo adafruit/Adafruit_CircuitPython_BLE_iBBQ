@@ -20,6 +20,10 @@ iBBQ protocol information is from https://gist.github.com/uucidl/b9c60b6d36d8080
 
 InkBird and EasyBBQ (from PyleUSA) are brands that use the iBBQ protocol in their products.
 """
+try:
+    from typing import Optional, Tuple
+except ImportError:
+    pass
 
 import struct
 
@@ -38,10 +42,10 @@ class _SettingsResult(ComplexCharacteristic):
 
     uuid = StandardUUID(0xFFF1)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(properties=Characteristic.NOTIFY)
 
-    def bind(self, service: Service) -> _bleio.PacketBuffer:
+    def bind(self, service: "IBBQService") -> _bleio.PacketBuffer:
         """Bind to an IBBQService."""
         bound_characteristic = super().bind(service)
         bound_characteristic.set_cccd(notify=True)
@@ -54,10 +58,10 @@ class _RealtimeData(ComplexCharacteristic):
 
     uuid = StandardUUID(0xFFF4)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(properties=Characteristic.NOTIFY)
 
-    def bind(self, service: Service) -> _bleio.PacketBuffer:
+    def bind(self, service: "IBBQService") -> _bleio.PacketBuffer:
         """Bind to an IBBQService."""
         bound_characteristic = super().bind(service)
         bound_characteristic.set_cccd(notify=True)
@@ -74,7 +78,7 @@ class IBBQService(Service):
     _UNITS_CELSIUS_MSG = b"\x02\x00\x00\x00\x00\x00"
     _REQUEST_BATTERY_LEVEL_MSG = b"\x08\x24\x00\x00\x00\x00"
 
-    def __init__(self, service: Service = None) -> None:
+    def __init__(self, service: Optional["IBBQService"] = None) -> None:
         super().__init__(service=service)
         # Defer creating buffers until needed, since MTU is not known yet.
         self._settings_result_buf = None
@@ -106,19 +110,19 @@ class IBBQService(Service):
     )
     """Send control messages here."""
 
-    def init(self):
+    def init(self) -> None:
         """Perform initial "pairing", which is not regular BLE pairing."""
         self.account_and_verify = self._CREDENTIALS_MSG
         self.settings_data = self._REALTIME_DATA_ENABLE_MSG
 
-    def display_fahrenheit(self):
+    def display_fahrenheit(self) -> None:
         """Display temperatures on device in degrees Fahrenheit.
 
         Note: This does not change the units returned by `temperatures`.
         """
         self.settings_data = self._UNITS_FAHRENHEIT_MSG
 
-    def display_celsius(self):
+    def display_celsius(self) -> None:
         """Display temperatures on device in degrees Celsius.
 
         Note: This does not change the units returned by `temperatures`.
@@ -126,7 +130,7 @@ class IBBQService(Service):
         self.settings_data = self._UNITS_CELSIUS_MSG
 
     @property
-    def temperatures(self):
+    def temperatures(self) -> Optional[Tuple]:
         """Return a tuple of temperatures for all the possible temperature probes on the device.
         Temperatures are in degrees Celsius. Unconnected probes return 0.0.
         """
@@ -145,7 +149,7 @@ class IBBQService(Service):
         return None
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> Optional[Tuple[float, float]]:
         """Get current battery level in volts as ``(current_voltage, max_voltage)``.
         Results are approximate and may differ from the
         actual battery voltage by 0.1v or so.
