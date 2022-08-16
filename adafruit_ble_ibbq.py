@@ -33,7 +33,7 @@ from adafruit_ble.services import Service
 from adafruit_ble.uuid import StandardUUID
 from adafruit_ble.characteristics import Characteristic, ComplexCharacteristic
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_iBBQ.git"
 
 
