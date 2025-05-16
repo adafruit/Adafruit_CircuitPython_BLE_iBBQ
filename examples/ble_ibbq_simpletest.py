@@ -5,10 +5,11 @@ import time
 
 import adafruit_ble
 from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
+
 from adafruit_ble_ibbq import IBBQService
 
-# PyLint can't find BLERadio for some reason so special case it here.
-ble = adafruit_ble.BLERadio()  # pylint: disable=no-member
+# Initialize BLERadio
+ble = adafruit_ble.BLERadio()
 
 ibbq_connection = None
 

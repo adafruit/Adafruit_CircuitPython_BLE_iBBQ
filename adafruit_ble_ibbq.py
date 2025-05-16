@@ -20,6 +20,7 @@ iBBQ protocol information is from https://gist.github.com/uucidl/b9c60b6d36d8080
 
 InkBird and EasyBBQ (from PyleUSA) are brands that use the iBBQ protocol in their products.
 """
+
 try:
     from typing import Optional, Tuple
 except ImportError:
@@ -29,9 +30,9 @@ import struct
 
 import _bleio
 from adafruit_ble.attributes import Attribute
+from adafruit_ble.characteristics import Characteristic, ComplexCharacteristic
 from adafruit_ble.services import Service
 from adafruit_ble.uuid import StandardUUID
-from adafruit_ble.characteristics import Characteristic, ComplexCharacteristic
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_iBBQ.git"
@@ -73,7 +74,7 @@ class IBBQService(Service):
     """Service for reading from an iBBQ thermometer."""
 
     _CREDENTIALS_MSG = b"\x21\x07\x06\x05\x04\x03\x02\x01\xb8\x22\x00\x00\x00\x00\x00"
-    _REALTIME_DATA_ENABLE_MSG = b"\x0B\x01\x00\x00\x00\x00"
+    _REALTIME_DATA_ENABLE_MSG = b"\x0b\x01\x00\x00\x00\x00"
     _UNITS_FAHRENHEIT_MSG = b"\x02\x01\x00\x00\x00\x00"
     _UNITS_CELSIUS_MSG = b"\x02\x00\x00\x00\x00\x00"
     _REQUEST_BATTERY_LEVEL_MSG = b"\x08\x24\x00\x00\x00\x00"
@@ -135,11 +136,9 @@ class IBBQService(Service):
         Temperatures are in degrees Celsius. Unconnected probes return 0.0.
         """
         if self._realtime_data_buf is None:
-            self._realtime_data_buf = bytearray(
-                self.realtime_data.incoming_packet_length  # pylint: disable=no-member
-            )
+            self._realtime_data_buf = bytearray(self.realtime_data.incoming_packet_length)
         data = self._realtime_data_buf
-        length = self.realtime_data.readinto(data)  # pylint: disable=no-member
+        length = self.realtime_data.readinto(data)
         if length > 0:
             return tuple(
                 struct.unpack_from("<H", data, offset=offset)[0] / 10
@@ -155,13 +154,11 @@ class IBBQService(Service):
         actual battery voltage by 0.1v or so.
         """
         if self._settings_result_buf is None:
-            self._settings_result_buf = bytearray(
-                self.settings_result.incoming_packet_length  # pylint: disable=no-member
-            )
+            self._settings_result_buf = bytearray(self.settings_result.incoming_packet_length)
 
         self.settings_data = self._REQUEST_BATTERY_LEVEL_MSG
         results = self._settings_result_buf
-        length = self.settings_result.readinto(results)  # pylint: disable=no-member
+        length = self.settings_result.readinto(results)
         if length >= 5:
             header, current_voltage, max_voltage = struct.unpack_from("<BHH", results)
             if header == 0x24:
